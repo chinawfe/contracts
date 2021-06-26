@@ -1,25 +1,46 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.6.12;
 
-import "./SafeMath.sol";
 import "./IERC20.sol";
-import "./Context.sol";
 import "./Address.sol";
 import "./Ownable.sol";
 import "./IMdexFactory.sol";
 import "./IMdexPair.sol";
 import "./IMdexRouter.sol";
-import "./ISwapMining.sol";
 
-/**
-    特点:
-    交易有10%的手续费
-    每笔交易的5%手续费自动分配给所有持有者,经典的持有即挖矿
-    每笔交易的5%手续费合约自动添加到流动性,并且锁定,完美的资金池自我成长性
-    总供应量的50%会燃烧到黑洞地址
+library SafeMath {
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+        return c;
+    }
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return sub(a, b, "SafeMath: subtraction overflow");
+    }
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
 
- */
+        return c;
+    }
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        if (a == 0) {
+            return 0;
+        }
+        uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+        return c;
+    }
 
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return div(a, b, "SafeMath: division by zero");
+    }
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+        return c;
+    }
+}
 contract SupermanToken is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
@@ -440,37 +461,20 @@ contract SupermanToken is Context, IERC20, Ownable {
     }
 
     function swapAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
-        // split the contract balance into halves
         uint256 half = contractTokenBalance.div(2);
         uint256 otherHalf = contractTokenBalance.sub(half);
-
-        // capture the contract's current ETH balance.
-        // this is so that we can capture exactly the amount of ETH that the
-        // swap creates, and not make the liquidity event include any ETH that
-        // has been manually sent to the contract
         uint256 initialBalance = address(this).balance;
-
-        // swap tokens for ETH
         swapTokensForEth(half); // <- this breaks the ETH -> HATE swap when swap+liquify is triggered
-
-        // how much ETH did we just swap into?
         uint256 newBalance = address(this).balance.sub(initialBalance);
-
-        // add liquidity to uniswap
-        addLiquidity(otherHalf, newBalance);
-        
+        addLiquidity(otherHalf, newBalance);// add liquidity to uniswap
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
 
     function swapTokensForEth(uint256 tokenAmount) private {
-        // generate the uniswap pair path of token -> weth
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = uniswapV2Router.WHT();
-
         _approve(address(this), address(uniswapV2Router), tokenAmount);
-
-        // make the swap
         uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
             0, // accept any amount of ETH
@@ -479,16 +483,6 @@ contract SupermanToken is Context, IERC20, Ownable {
             block.timestamp
         );
     }
-    
-    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-     * the total supply.
-     *
-     * Emits a `Transfer` event with `from` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `to` cannot be the zero address.
-     */
     function mint(address account, uint256 amount) external onlyOwner returns (bool) {
         require(account != address(0), "ERC20: mint to the zero address");
         require(amount > 0, "ERC20: mint amount must be gt zero");
@@ -497,18 +491,6 @@ contract SupermanToken is Context, IERC20, Ownable {
         emit Transfer(address(0), account, amount);
         return true;
     }
-
-    /**
-     * @dev Destroys `amount` tokens from `account`, reducing the
-     * total supply.
-     *
-     * Emits a `Transfer` event with `to` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens.
-     */
     function burn(address account, uint256 value) external onlyOwner returns (bool) {
         require(account != address(0), "ERC20: burn from the zero address");
         require(value > 0, "ERC20: burn amount must be gt zero");
