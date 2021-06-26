@@ -4,9 +4,7 @@ pragma solidity ^0.6.12;
 import "./IERC20.sol";
 import "./Address.sol";
 import "./Ownable.sol";
-import "./IMdexFactory.sol";
-import "./IMdexPair.sol";
-import "./IMdexRouter.sol";
+import "./IMdex.sol";
 
 library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
