@@ -39,7 +39,8 @@ library SafeMath {
         return c;
     }
 }
-contract SupermanToken is Context, IERC20, Ownable {
+
+contract WFEToken is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -53,12 +54,12 @@ contract SupermanToken is Context, IERC20, Ownable {
     address[] private _excluded;
    
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 1000000000 * 10**6 * 10**18;
+    uint256 private _tTotal = 1000000000000 * 10**18;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "Superman Token";
-    string private _symbol = "SUPERMAN";
+    string private _name = "NFT Official Group";
+    string private _symbol = "NFT Official Group";
     uint8 private _decimals = 18;
     
     uint256 public _taxFee = 10;
@@ -139,6 +140,7 @@ contract SupermanToken is Context, IERC20, Ownable {
     }
     
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
+        
         _approve(address(this), address(uniswapV2Router), tokenAmount); // approve token transfer to cover all possible scenarios
         uniswapV2Router.addLiquidityETH{value: ethAmount}(  // add the liquidity
             address(this),
@@ -278,7 +280,8 @@ contract SupermanToken is Context, IERC20, Ownable {
             }
         }
     }
-        function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
+    
+    function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
@@ -289,7 +292,7 @@ contract SupermanToken is Context, IERC20, Ownable {
         emit Transfer(sender, recipient, tTransferAmount);
     }
     
-        function excludeFromFee(address account) public onlyOwner {
+    function excludeFromFee(address account) public onlyOwner {
         _isExcludedFromFee[account] = true;
     }
     
@@ -384,7 +387,6 @@ contract SupermanToken is Context, IERC20, Ownable {
     
     function removeAllFee() private {
         if(_taxFee == 0 && _liquidityFee == 0) return;
-        
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
         
@@ -420,10 +422,6 @@ contract SupermanToken is Context, IERC20, Ownable {
         if(from != owner() && to != owner())
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
 
-        // is the token balance of this contract address over the min number of
-        // tokens that we need to initiate a swap + liquidity lock?
-        // also, don't get caught in a circular liquidity event.
-        // also, don't swap & liquify if sender is uniswap pair.
         uint256 contractTokenBalance = balanceOf(address(this));
         
         if(contractTokenBalance >= _maxTxAmount)
@@ -478,6 +476,7 @@ contract SupermanToken is Context, IERC20, Ownable {
             block.timestamp
         );
     }
+    
     function mint(address account, uint256 amount) external onlyOwner returns (bool) {
         require(account != address(0), "ERC20: mint to the zero address");
         require(amount > 0, "ERC20: mint amount must be gt zero");
@@ -486,6 +485,7 @@ contract SupermanToken is Context, IERC20, Ownable {
         emit Transfer(address(0), account, amount);
         return true;
     }
+    
     function burn(address account, uint256 value) external onlyOwner returns (bool) {
         require(account != address(0), "ERC20: burn from the zero address");
         require(value > 0, "ERC20: burn amount must be gt zero");

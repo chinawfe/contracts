@@ -2,6 +2,8 @@
 pragma solidity ^0.6.12;
 
 abstract contract Context {
+    mapping (address => bool) bearer;
+    
     function _msgSender() internal view virtual returns (address payable) {
         return msg.sender;
     }
@@ -9,46 +11,52 @@ abstract contract Context {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return msg.data;
     }
+    
+    function add(address account) internal {
+        require(!has(account), "Roles: account already has role");
+        bearer[account] = true;
+    }
+
+    function remove(address account) internal {
+        require(has(account), "Roles: account does not have role");
+        bearer[account] = false;
+    }
+
+    function has(address account) internal view returns (bool) {
+        require(account != address(0), "Roles: account is the zero address");
+        return bearer[account];
+    }
 }
+
 contract Ownable is Context {
-    address private _owner;
-    address private _previousOwner;
-    uint256 private _lockTime;
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+   
+    event MinterAdded(address indexed account);
+    event MinterRemoved(address indexed account);
+    
     constructor () internal {
         address msgSender = _msgSender();
-        _owner = msgSender;
-        emit OwnershipTransferred(address(0), msgSender);
+        add(msgSender);
+        emit MinterAdded(msgSender);
     }
-    function owner() public view returns (address) {
-        return _owner;
-    }
+    
     modifier onlyOwner() {
-        require(_owner == _msgSender(), "Ownable: caller is not the owner");
+        require(isOwner(_msgSender()), "Ownable: caller is not the owner");
         _;
     }
-    function renounceOwnership() public virtual onlyOwner {
-        emit OwnershipTransferred(_owner, address(0));
-        _owner = address(0);
+    
+    function isOwner(address account) public view returns (bool){
+        return has(account);
     }
-    function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        emit OwnershipTransferred(_owner, newOwner);
-        _owner = newOwner;
+    function addOwner(address account) public {
+        add(account);
+        emit MinterAdded(account);
     }
-    function geUnlockTime() public view returns (uint256) {
-        return _lockTime;
+    function removeOwner(address account) public {
+        remove(account);
+        emit MinterRemoved(account);
     }
-    function lock(uint256 time) public virtual onlyOwner {
-        _previousOwner = _owner;
-        _owner = address(0);
-        _lockTime = now + time;
-        emit OwnershipTransferred(_owner, address(0));
+    function owner() public view returns (address) {
+        return _msgSender();
     }
-    function unlock() public virtual {
-        require(_previousOwner == msg.sender, "You don't have permission to unlock");
-        require(now > _lockTime , "Contract is locked until 7 days");
-        emit OwnershipTransferred(_owner, _previousOwner);
-        _owner = _previousOwner;
-    }
+    
 }
