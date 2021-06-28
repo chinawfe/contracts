@@ -138,12 +138,9 @@ contract SupermanToken is Context, IERC20, Ownable {
         return _allowances[owner][spender];
     }
     
-        function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
-        // approve token transfer to cover all possible scenarios
-        _approve(address(this), address(uniswapV2Router), tokenAmount);
-
-        // add the liquidity
-        uniswapV2Router.addLiquidityETH{value: ethAmount}(
+    function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
+        _approve(address(this), address(uniswapV2Router), tokenAmount); // approve token transfer to cover all possible scenarios
+        uniswapV2Router.addLiquidityETH{value: ethAmount}(  // add the liquidity
             address(this),
             tokenAmount,
             0, // slippage is unavoidable
