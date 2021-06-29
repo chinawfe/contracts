@@ -29,7 +29,6 @@ library SafeMath {
         require(c / a == b, "SafeMath: multiplication overflow");
         return c;
     }
-
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
         return div(a, b, "SafeMath: division by zero");
     }
@@ -58,14 +57,14 @@ contract WFEToken is Context, IERC20, Ownable {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "NFT Official Group";
-    string private _symbol = "NFT Official Group";
+    string private _name = "WFE Official Group";
+    string private _symbol = "WFE Official Group";
     uint8 private _decimals = 18;
     
     uint256 public _taxFee = 10;
     uint256 private _previousTaxFee = _taxFee;
     
-    uint256 public _liquidityFee = 15;
+    uint256 public _liquidityFee = 5;
     uint256 private _previousLiquidityFee = _liquidityFee;
 
     IMdexRouter public immutable uniswapV2Router;
@@ -79,11 +78,7 @@ contract WFEToken is Context, IERC20, Ownable {
     
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
-    event SwapAndLiquify(
-        uint256 tokensSwapped,
-        uint256 ethReceived,
-        uint256 tokensIntoLiqudity
-    );
+    event SwapAndLiquify(uint256 tokensSwapped,uint256 ethReceived,uint256 tokensIntoLiqudity);
     
     modifier lockTheSwap {
         inSwapAndLiquify = true;
@@ -93,7 +88,7 @@ contract WFEToken is Context, IERC20, Ownable {
     
     constructor () public {
         _rOwned[_msgSender()] = _rTotal;
-        
+
         IMdexRouter _uniswapV2Router = IMdexRouter(0xED7d5F38C79115ca12fe6C0041abb22F0A06C300);
          // Create a uniswap pair for this new token
         uniswapV2Pair = IMdexFactory(_uniswapV2Router.factory())
@@ -140,7 +135,6 @@ contract WFEToken is Context, IERC20, Ownable {
     }
     
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
-        
         _approve(address(this), address(uniswapV2Router), tokenAmount); // approve token transfer to cover all possible scenarios
         uniswapV2Router.addLiquidityETH{value: ethAmount}(  // add the liquidity
             address(this),
@@ -308,10 +302,12 @@ contract WFEToken is Context, IERC20, Ownable {
         _liquidityFee = liquidityFee;
     }
    
-    function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
-        _maxTxAmount = _tTotal.mul(maxTxPercent).div(
-            10**2
-        );
+   function setNumTokensSellToAddToLiquidity(uint256 liquidity) external onlyOwner{
+       numTokensSellToAddToLiquidity = liquidity * 10** 18;
+   }
+   
+   function setMaxTxAmount(uint256 maxTxAmount) external onlyOwner{
+        _maxTxAmount = maxTxAmount * 10**18;
     }
 
     function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner {
