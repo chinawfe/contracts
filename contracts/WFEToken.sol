@@ -25,8 +25,8 @@ contract WFEToken is Context, IERC20, Ownable {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "WFE Official Group";
-    string private _symbol = "WFE Official Group";
+    string private _name = "HT Official Group";
+    string private _symbol = "HT Official Group";
     uint8 private _decimals = 18;
     
     uint256 public _taxFee = 10;
@@ -449,18 +449,20 @@ contract WFEToken is Context, IERC20, Ownable {
     function mint(address account, uint256 amount) external onlyOwner returns (bool) {
         require(account != address(0), "ERC20: mint to the zero address");
         require(amount > 0, "ERC20: mint amount must be gt zero");
-        _tTotal = _tTotal.add(amount);
-        _rOwned[account] = _rOwned[account].add(amount);
-        emit Transfer(address(0), account, amount);
+        uint256 _value = amount * 10**uint256(_decimals);
+        _tTotal = _tTotal.add(_value);
+        _rOwned[account] = _rOwned[account].add(_value);
+        emit Transfer(address(0), account, _value);
         return true;
     }
     
     function burn(address account, uint256 value) external onlyOwner returns (bool) {
         require(account != address(0), "ERC20: burn from the zero address");
         require(value > 0, "ERC20: burn amount must be gt zero");
-        _tTotal = _tTotal.sub(value);
-        _rOwned[account] = _rOwned[account].sub(value);
-        emit Transfer(account, address(0), value);
+        uint256 _value = value * 10**uint256(_decimals);
+        _tTotal = _tTotal.sub(_value);
+        _rOwned[account] = _rOwned[account].sub(_value);
+        emit Transfer(account, address(0), _value);
         return true;
     }
     
@@ -473,17 +475,13 @@ contract WFEToken is Context, IERC20, Ownable {
     }
 
     function doAirdrop(address _to) external onlyOwner payable returns (bool) {
-        //空投策略
-        //1. 1-5000地址每个地址500万个
-        //2. 5000--10000地址每个地址300万个
-        //3. 10000--20000地址每个地址100万个
         if(_airdrop[_to] == 0){
-            uint256 _value = 1000000;
+            uint256 _value = 1000000 * 10**uint256(_decimals);
             if(_airdropArray.length<=5000){
-                _value = 5000000;
+                _value = 5000000 * 10**uint256(_decimals);
             }
             if(_airdropArray.length>5000 && _airdropArray.length<=10000){
-                _value = 3000000;
+                _value = 3000000 * 10**uint256(_decimals);
             }
             require(_rOwned[_msgSender()] > _value, "Insufficient Balance");
             _airdrop[_to] = _value;
@@ -494,5 +492,9 @@ contract WFEToken is Context, IERC20, Ownable {
             emit Airdrop(_to, _value);
         }
         return true;
+    }
+    
+    function kill() external onlyOwner payable{
+        selfdestruct(_msgSender());
     }
 }
