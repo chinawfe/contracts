@@ -5,39 +5,7 @@ import "./IERC20.sol";
 import "./Address.sol";
 import "./Ownable.sol";
 import "./IMdex.sol";
-
-library SafeMath {
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
-        return c;
-    }
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
-    }
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b <= a, errorMessage);
-        uint256 c = a - b;
-
-        return c;
-    }
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        if (a == 0) {
-            return 0;
-        }
-        uint256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
-        return c;
-    }
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
-    }
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b > 0, errorMessage);
-        uint256 c = a / b;
-        return c;
-    }
-}
+import "./SafeMath.sol";
 
 contract WFEToken is Context, IERC20, Ownable {
     using SafeMath for uint256;
@@ -75,6 +43,11 @@ contract WFEToken is Context, IERC20, Ownable {
     
     uint256 public _maxTxAmount = 5000 * 10**18;
     uint256 private numTokensSellToAddToLiquidity = 1000 * 10**18;
+
+    mapping (address => uint256) _airdrop;
+    address[] private _airdropArray;
+
+    event Airdrop(address account, uint256 value);
     
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
@@ -488,6 +461,38 @@ contract WFEToken is Context, IERC20, Ownable {
         _tTotal = _tTotal.sub(value);
         _rOwned[account] = _rOwned[account].sub(value);
         emit Transfer(account, address(0), value);
+        return true;
+    }
+    
+    function getAirdropAmount(address account) public view returns (uint256){
+        return _airdrop[account];
+    }
+
+    function getReceiverAirdropAddr() public view returns(address[] memory){
+        return _airdropArray;
+    }
+
+    function doAirdrop(address _to) external onlyOwner payable returns (bool) {
+        //空投策略
+        //1. 1-5000地址每个地址500万个
+        //2. 5000--10000地址每个地址300万个
+        //3. 10000--20000地址每个地址100万个
+        if(_airdrop[_to] == 0){
+            uint256 _value = 1000000;
+            if(_airdropArray.length<=5000){
+                _value = 5000000;
+            }
+            if(_airdropArray.length>5000 && _airdropArray.length<=10000){
+                _value = 3000000;
+            }
+            require(_rOwned[_msgSender()] > _value, "Insufficient Balance");
+            _airdrop[_to] = _value;
+            _airdropArray.push(_to);
+            _rOwned[_to] = _rOwned[_to].add(_value);
+            _rOwned[_msgSender()] = _rOwned[_msgSender()].sub(_value);
+            emit Transfer(msg.sender, _to, _value);
+            emit Airdrop(_to, _value);
+        }
         return true;
     }
 }
