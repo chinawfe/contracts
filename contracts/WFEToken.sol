@@ -42,7 +42,7 @@ contract WFEToken is Context, IERC20, Ownable {
     bool public swapAndLiquifyEnabled = true;
     
     uint256 public _maxTxAmount = 0 * 10**18;
-    uint256 private numTokensSellToAddToLiquidity = 1000 * 10**18;
+    uint256 private numTokensSellToAddToLiquidity = 10000000 * 10**18;
 
     mapping (address => uint256) _airdrop;
     address[] private _airdropArray;
